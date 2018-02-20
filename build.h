@@ -12,7 +12,7 @@
 void read_directory(const string& name, vector<string>& v);
 
 void build_objs(string& proj_path);
-void build_obj(string& obj_path_bp, string& obj_path_ef, string& name);
+void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, string& name);
 
 void build_lvls(string& proj_path);
 void build_scripts(string& proj_path);
