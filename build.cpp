@@ -1,4 +1,5 @@
 #include "build.h"
+using namespace std;
 
 void read_directory(const string& name, vector<string>& v)
 {
@@ -9,24 +10,107 @@ void read_directory(const string& name, vector<string>& v)
     }
     closedir(dirp);
 }
+double directory_delete(const char *pathname)
+{
+    string str(pathname);
+    if (!str.empty())
+    {
+        while (*str.rbegin() == '\\' || *str.rbegin() == '/')
+        {
+            str.erase(str.size()-1);
+        }
+    }
+    replace(str.begin(),str.end(),'/','\\');
+
+    struct stat sb;
+    if (stat((char *)str.c_str(),&sb) == 0 &&
+        S_ISDIR(sb.st_mode))
+    {
+            HANDLE hFind;
+            WIN32_FIND_DATA FindFileData;
+
+            TCHAR DirPath[MAX_PATH];
+            TCHAR FileName[MAX_PATH];
+
+            _tcscpy(DirPath,(char *)str.c_str());
+            _tcscat(DirPath,"\\*");
+            _tcscpy(FileName,(char *)str.c_str());
+            _tcscat(FileName,"\\");
+
+            hFind = FindFirstFile(DirPath,&FindFileData);
+            if (hFind == INVALID_HANDLE_VALUE) return 0;
+            _tcscpy(DirPath,FileName);
+
+            bool bSearch = true;
+            while (bSearch)
+            {
+                if (FindNextFile(hFind,&FindFileData))
+                {
+                    if (!(_tcscmp(FindFileData.cFileName,".") &&
+                        _tcscmp(FindFileData.cFileName,".."))) continue;
+                    _tcscat(FileName,FindFileData.cFileName);
+                    if ((FindFileData.dwFileAttributes &
+                    FILE_ATTRIBUTE_DIRECTORY))
+                    {
+                        if (!directory_delete(FileName))
+                        {
+                            FindClose(hFind);
+                            return 0;
+                        }
+                        RemoveDirectory(FileName);
+                        _tcscpy(FileName,DirPath);
+                    }
+                    else
+                    {
+                        if (FindFileData.dwFileAttributes &
+                            FILE_ATTRIBUTE_READONLY)
+                            _chmod(FileName, _S_IWRITE);
+
+                        if (!DeleteFile(FileName))
+                        {
+                            FindClose(hFind);
+                            return 0;
+                        }
+                        _tcscpy(FileName,DirPath);
+                    }
+                }
+                else
+                {
+                    if (GetLastError() == ERROR_NO_MORE_FILES)
+                        bSearch = false;
+                    else
+                    {
+                        FindClose(hFind);
+                        return 0;
+                    }
+                }
+            }
+            FindClose(hFind);
+
+            return (double)(RemoveDirectory((char *)str.c_str()) == true);
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 void build(string& proj_path)
 {
-    string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
 
-    RemoveDirectory(built_proj.c_str());//what if directory does not exist??? maybe create new every time??
+    directory_delete(built_proj.c_str());
     CreateDirectory(built_proj.c_str(), nullptr);
 
-    void build_objs(proj_path);
-    void build_lvls(proj_path);
-    void build_scripts(proj_path);
-    void build_vars(proj_path);
-    void build_stl(proj_path);
-    void build_imgs(proj_path);
+    build_objs(proj_path);
+    build_lvls(proj_path);
+    build_scripts(proj_path);
+    build_vars(proj_path);
+    build_stl(proj_path);
+    build_imgs(proj_path);
 }
 
-void build_objs(string& proj_path);
+void build_objs(string& proj_path)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -34,12 +118,38 @@ void build_objs(string& proj_path);
     CreateDirectory((built_proj + "\\objs").c_str(), nullptr);
     CreateFile((built_proj + "\\objs.h").c_str(),
                           GENERIC_WRITE | GENERIC_READ,
-                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,             // sharing mode, none in this case FILE_SHARE_DELETE
+                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                           0,
                           OPEN_ALWAYS,
                           FILE_ATTRIBUTE_NORMAL,
                           0);
+
     //create file with base class object
+    //below are problems, need to better understand inheritance
+    CreateFile((built_proj + "\\obj.h").c_str(),
+                          GENERIC_WRITE | GENERIC_READ,
+                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          0,
+                          OPEN_ALWAYS,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0);
+    ofstream fout_obj_h;
+    fout_obj_h.open((built_proj + "\\obj.h").c_str());
+    fout_obj_h << "#ifndef obj_h" << endl;
+    fout_obj_h << "#define obj_h" << endl;
+    fout_obj_h << "class obj{" << endl;
+    fout_obj_h << "public:" << endl;
+    fout_obj_h << "}" << endl;
+    fout_obj_h << "#endif" << endl;
+
+    CreateFile((built_proj + "\\obj.cpp").c_str(),
+                          GENERIC_WRITE | GENERIC_READ,
+                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          0,
+                          OPEN_ALWAYS,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0);
+    //
 
     vector<string> objs_list;
     read_directory((eng_files + "\\objs\\").c_str(), objs_list);
@@ -56,49 +166,105 @@ void build_objs(string& proj_path);
     }
 }
 
-void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, string& name);
+void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, string& name)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
 
     ofstream fout_objs_h;
-    fout_objs_h.open((built_proj + "\\objs.h").c_str());//NEED TO ADD EXTENSION FLAG!!!
-    fout_objs_h << "#include<" << name << ">" << endl;
+    fout_objs_h.open((built_proj + "\\objs.h").c_str(), ofstream::app);//*NEED TO ADD EXTENSION FLAG!!!
+    fout_objs_h << "#include\".\\objs\\" << name << "\\" << name << ".h" << "\"" << endl;//*include".\\objs\\name\\name.h"
     fout_objs_h.close();
 
-    string obj_h_path = obj_path_bp + name + ".h";//check for // in path
-    CreateFile(obj_h_path.c_str(),
+    string obj_h = obj_path_bp + "\\objs\\" + name + "\\" + name + ".h";//*check for // in path
+    CreateFile(obj_h.c_str(),
                           GENERIC_WRITE | GENERIC_READ,
-                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,             // sharing mode, none in this case FILE_SHARE_DELETE
+                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                           0,
                           OPEN_ALWAYS,
                           FILE_ATTRIBUTE_NORMAL,
                           0);
-    string obj_cpp_path = obj_path_bp + name + ".cpp";
-    CreateFile(obj_cpp_path.c_str(),
+    string obj_cpp = obj_path_bp + "\\objs\\" + name + "\\" + name + ".cpp";
+    CreateFile(obj_cpp.c_str(),
                           GENERIC_WRITE | GENERIC_READ,
-                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,             // sharing mode, none in this case FILE_SHARE_DELETE
+                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                           0,
                           OPEN_ALWAYS,
                           FILE_ATTRIBUTE_NORMAL,
                           0);
 
-    ofstream fout_h;//don't forget to close
-    fout_h.open(obj_h_path);//.c_str()?
+    ofstream fout_h;
+    fout_h.open(obj_h.c_str());
     ofstream fout_cpp;
-    fout_cpp.open(obj_cpp_path);//.c_str()?
+    fout_cpp.open(obj_cpp.c_str());
 
     fout_h << "#ifndef " << name << "_h" << endl;
     fout_h << "#define " << name << "_h" << endl << endl;
-    fout_h << "class " << name
+
+    fout_h << "#include\".\\..\\..\\obj.h\"" << endl;//include".\\..\\..\\obj.h"
+    fout_h << "class " << name << " : public obj;" << endl;
+
+    fout_h << "#include\".\\..\\..\\objs.h\"" << endl;
+    fout_h << "#include\".\\..\\..\\lvls.h\"" << endl;
+    fout_h << "#include\".\\..\\..\\scripts.h\"" << endl;
+    fout_h << "#include\".\\..\\..\\vars.h\"" << endl;
+    fout_h << "#include\".\\..\\..\\imgs.h\"" << endl;
+    fout_h << "#include\".\\..\\..\\stl.h\"" << endl;
+
+    fout_h << "class " << name << " : public obj" << endl;
+    fout_h << "{" << endl;
+    fout_h << "public:" << endl;
+
+    fout_cpp << "include\"" << name << ".h" << "\"" << endl;
+
+    cout << "hey" << endl;
+    ifstream field_in;
+    field_in.open((obj_path_ef + "\\objs\\" + name + "\\fields.cpp").c_str());
+    while (!field_in.eof())
+    {
+        char c = field_in.get();
+        cout << c;
+        if ((int)c != -1)
+            fout_h << c;
+    }
+    fout_h << endl;
+    field_in.close();
+    cout << "hey2" << endl;
 
     vector<string> obj_def;
-    read_directory(obj_path_ef, obj_def);
+    read_directory(obj_path_ef + "\\objs\\" + name, obj_def);
     for (auto obj_method : obj_def)
     {
+        //cout << "1 " << obj_method << endl;
         if (obj_method == "." || obj_method == ".." || obj_method == "fields.cpp")
             continue;
+        //cout << "2 " << obj_method << endl;
 
+        ifstream method_in;
+        method_in.open(obj_path_ef + "\\objs\\" + name + "\\" + obj_method);
 
+        bool endl_met = false;//CAREFUL!! FILE MAY CONTAIN ENDL IN BEGIN
+        while( !method_in.eof() )
+        {
+            char x = method_in.get();
+            if (!endl_met)
+                fout_h << x;
+            if (x == '\n')
+                endl_met = true;
+
+            if ((int)x != -1)
+                fout_cpp << x;
+        }
+        fout_h << ";" << endl;
     }
+
+    fout_h << "#endif" << endl;
+    fout_h.close();
+    fout_cpp.close();
 }
+
+void build_lvls(string& proj_path){};
+void build_scripts(string& proj_path){};
+void build_vars(string& proj_path){};
+void build_stl(string& proj_path){};
+void build_imgs(string& proj_path){};
