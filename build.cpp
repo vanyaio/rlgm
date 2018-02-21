@@ -168,6 +168,11 @@ void build_objs(string& proj_path)
 
 void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, string& name)
 {
+    cout << proj_path << endl;
+    cout << obj_path_bp << endl;
+    cout << obj_path_ef << endl;
+    cout << name << endl;
+
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
 
@@ -176,7 +181,7 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
     fout_objs_h << "#include\".\\objs\\" << name << "\\" << name << ".h" << "\"" << endl;//*include".\\objs\\name\\name.h"
     fout_objs_h.close();
 
-    string obj_h = obj_path_bp + "\\objs\\" + name + "\\" + name + ".h";//*check for // in path
+    string obj_h = obj_path_bp + "\\" + name + ".h";//*check for // in path
     CreateFile(obj_h.c_str(),
                           GENERIC_WRITE | GENERIC_READ,
                           FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -184,7 +189,7 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
                           OPEN_ALWAYS,
                           FILE_ATTRIBUTE_NORMAL,
                           0);
-    string obj_cpp = obj_path_bp + "\\objs\\" + name + "\\" + name + ".cpp";
+    string obj_cpp = obj_path_bp + "\\" + name + ".cpp";
     CreateFile(obj_cpp.c_str(),
                           GENERIC_WRITE | GENERIC_READ,
                           FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -215,11 +220,13 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
     fout_h << "{" << endl;
     fout_h << "public:" << endl;
 
-    fout_cpp << "include\"" << name << ".h" << "\"" << endl;
+    fout_cpp << "#include\"" << name << ".h" << "\"" << endl;
 
-    cout << "hey" << endl;
     ifstream field_in;
-    field_in.open((obj_path_ef + "\\objs\\" + name + "\\fields.cpp").c_str());
+    field_in.open((obj_path_ef + "\\fields.cpp").c_str());
+    if (field_in.is_open())
+        cout << 33 << endl;
+    cout << 3 << endl;
     while (!field_in.eof())
     {
         char c = field_in.get();
@@ -227,37 +234,37 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
         if ((int)c != -1)
             fout_h << c;
     }
+    cout << 4 << endl;
     fout_h << endl;
     field_in.close();
-    cout << "hey2" << endl;
 
     vector<string> obj_def;
-    read_directory(obj_path_ef + "\\objs\\" + name, obj_def);
+    read_directory(obj_path_ef, obj_def);
     for (auto obj_method : obj_def)
     {
-        //cout << "1 " << obj_method << endl;
         if (obj_method == "." || obj_method == ".." || obj_method == "fields.cpp")
             continue;
-        //cout << "2 " << obj_method << endl;
 
         ifstream method_in;
-        method_in.open(obj_path_ef + "\\objs\\" + name + "\\" + obj_method);
+        method_in.open(obj_path_ef + "\\" + obj_method);
 
         bool endl_met = false;//CAREFUL!! FILE MAY CONTAIN ENDL IN BEGIN
+        //THERE ARE PROBLEMS WITH NAMESPACES
         while( !method_in.eof() )
         {
             char x = method_in.get();
+
+            if (endl_met == false && x == '\n')
+                endl_met = true;
             if (!endl_met)
                 fout_h << x;
-            if (x == '\n')
-                endl_met = true;
-
             if ((int)x != -1)
                 fout_cpp << x;
         }
         fout_h << ";" << endl;
     }
 
+    fout_h << "};" << endl;
     fout_h << "#endif" << endl;
     fout_h.close();
     fout_cpp.close();
