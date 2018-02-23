@@ -203,12 +203,11 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
     fout_h << "#define " << name << "_h" << endl << endl;
 
     fout_h << "#include\".\\..\\..\\obj.h\"" << endl;//include".\\..\\..\\obj.h"
-    fout_h << "class " << name << " : public obj;" << endl;
+    fout_h << "class " << name << ";" << endl;
 
     fout_h << "#include\".\\..\\..\\objs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\lvls.h\"" << endl;
     fout_h << "#include\".\\..\\..\\scripts.h\"" << endl;
-    fout_h << "#include\".\\..\\..\\vars.h\"" << endl;
     fout_h << "#include\".\\..\\..\\imgs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\stl.h\"" << endl;
 
@@ -217,6 +216,7 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
     fout_h << "public:" << endl;
 
     fout_cpp << "#include\"" << name << ".h" << "\"" << endl;
+    fout_cpp << "#include\".\\..\\..\\vars.h\"" << endl;
 
     ifstream field_in;
     field_in.open((obj_path_ef + "\\fields.cpp").c_str());
@@ -262,7 +262,7 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
     fout_cpp.close();
 }
 
-void build_lvls(string& proj_path)//test
+void build_lvls(string& proj_path)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -276,8 +276,6 @@ void build_lvls(string& proj_path)//test
                FILE_ATTRIBUTE_NORMAL,
                0);
 
-    //create file with base class object
-    //below are problems, need to better understand inheritance
     CreateFile((built_proj + "\\lvl.h").c_str(),
                GENERIC_WRITE | GENERIC_READ,
                FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -286,9 +284,9 @@ void build_lvls(string& proj_path)//test
                FILE_ATTRIBUTE_NORMAL,
                0);
     ofstream fout_lvl_h;
-    fout_lvl_h.open((built_proj + "\\obj.h").c_str());
-    fout_lvl_h << "#ifndef obj_h" << endl;
-    fout_lvl_h << "#define obj_h" << endl;
+    fout_lvl_h.open((built_proj + "\\lvl.h").c_str());
+    fout_lvl_h << "#ifndef lvl_h" << endl;
+    fout_lvl_h << "#define lvl_h" << endl;
     fout_lvl_h << "class lvl{" << endl;
     fout_lvl_h << "public:" << endl;
     fout_lvl_h << "}" << endl;
@@ -310,23 +308,23 @@ void build_lvls(string& proj_path)//test
         if (lvl_folder == "." || lvl_folder == "..")
             continue;
 
-        string lvl_path_bp = built_proj + "\\lvls\\" + obj_folder;
-        string lvl_path_ef = eng_files + "\\lvls\\" + obj_folder;
-        CreateDirectory(obj_path_bp.c_str(), nullptr);
+        string lvl_path_bp = built_proj + "\\lvls\\" + lvl_folder;
+        string lvl_path_ef = eng_files + "\\lvls\\" + lvl_folder;
+        CreateDirectory(lvl_path_bp.c_str(), nullptr);
 
-        build_obj(proj_path, lvl_path_bp, lvl_path_ef, lvl_folder);
+        build_lvl(proj_path, lvl_path_bp, lvl_path_ef, lvl_folder);
     }
 };
 
 
-void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, string& name)//test
+void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, string& name)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
 
     ofstream fout_lvls_h;
-    fout_lvls_h.open((built_proj + "\\lvls.h").c_str(), ofstream::app);//*NEED TO ADD EXTENSION FLAG!!!
-    fout_lvls_h << "#include\".\\lvls\\" << name << "\\" << name << ".h" << "\"" << endl;//*include".\\objs\\name\\name.h"
+    fout_lvls_h.open((built_proj + "\\lvls.h").c_str(), ofstream::app);
+    fout_lvls_h << "#include\".\\lvls\\" << name << "\\" << name << ".h" << "\"" << endl;//*include".\\lvls\\name\\name.h"
     fout_lvls_h.close();
 
     string lvl_h = lvl_path_bp + "\\" + name + ".h";//*check for // in path
@@ -354,13 +352,12 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
     fout_h << "#ifndef " << name << "_h" << endl;
     fout_h << "#define " << name << "_h" << endl << endl;
 
-    fout_h << "#include\".\\..\\..\\lvl.h\"" << endl;//include".\\..\\..\\obj.h"
-    fout_h << "class " << name << " : public lvl;" << endl;
+    fout_h << "#include\".\\..\\..\\lvl.h\"" << endl;//include".\\..\\..\\lvl.h"
+    fout_h << "class " << name << ";" << endl;
 
     fout_h << "#include\".\\..\\..\\objs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\lvls.h\"" << endl;
     fout_h << "#include\".\\..\\..\\scripts.h\"" << endl;
-    fout_h << "#include\".\\..\\..\\vars.h\"" << endl;
     fout_h << "#include\".\\..\\..\\imgs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\stl.h\"" << endl;
 
@@ -369,6 +366,7 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
     fout_h << "public:" << endl;
 
     fout_cpp << "#include\"" << name << ".h" << "\"" << endl;
+    fout_cpp << "#include\".\\..\\..\\vars.h\"" << endl;
 
     ifstream field_in;
     field_in.open((lvl_path_ef + "\\fields.cpp").c_str());
@@ -427,17 +425,17 @@ void build_scripts(string& proj_path)//test
                FILE_ATTRIBUTE_NORMAL,
                0);
 
-    vector<string> objs_list;
+    vector<string> scripts_list;
     read_directory((eng_files + "\\scripts\\").c_str(), scripts_list);
     for (auto script : scripts_list)
     {
-        if (scriptj_folder == "." || scriptj_folder == "..")
+        if (script == "." || script == "..")
             continue;
 
         string script_path_bp = built_proj + "\\scripts";
         string script_path_ef = eng_files + "\\scripts";
 
-        build_obj(proj_path, script_path_bp, script_path_ef, script);
+        build_script(proj_path, script_path_bp, script_path_ef, script);
     }
 };
 
@@ -448,7 +446,7 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
 
     string name = "";
     for (int i = 0; i < name_cpp.length() - 4; i++)
-        name = name + str(name_cpp[i]);
+        name = name + (name_cpp[i]);
 
     ofstream fout_scripts_h;
     fout_scripts_h.open((built_proj + "\\scripts.h").c_str(), ofstream::app);
@@ -491,7 +489,7 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
 
 
     ifstream script_in;
-    script_in.open(lvl_path_ef + "\\" + name_cpp);
+    script_in.open(script_path_ef + "\\" + name_cpp);
 
     bool endl_met = false;//CAREFUL!! FILE MAY CONTAIN ENDL IN BEGIN
     while(!script_in.eof())
@@ -512,7 +510,7 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
     fout_cpp.close();
 }
 
-void build_vars(string& proj_path)//working on
+void build_vars(string& proj_path)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -554,8 +552,59 @@ void build_vars(string& proj_path)//working on
     fout_h << "#endif" << endl;
 };
 
-void build_imgs(string& proj_path)
+void build_imgs(string& proj_path)//test
 {
+    string eng_files = proj_path + "\\engine_files";
+    string built_proj = proj_path + "\\built_project";
+
+    CreateDirectory((built_proj + "\\imgs").c_str(), nullptr);
+
+    vector<string> imgs_list;
+    read_directory((eng_files + "\\imgs\\").c_str(), imgs_list);
+    for (auto img : imgs_list)
+    {
+        if (img == "." || img == "..")
+            continue;
+
+        ifstream img_in;
+        img_in.open((eng_files + "\\imgs\\" + img).c_str());
+        ofstream img_out;
+        if (img != "img.h" && img != "img.cpp")
+        {
+            CreateFile((built_proj + "\\imgs\\" + img).c_str(),
+                   GENERIC_WRITE | GENERIC_READ,
+                   FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                   0,
+                   OPEN_ALWAYS,
+                   FILE_ATTRIBUTE_NORMAL,
+                   0);
+
+            img_out.open((built_proj + "\\imgs\\" + img).c_str());
+        }
+        else
+        {
+            CreateFile((built_proj + "\\" + img).c_str(),
+                   GENERIC_WRITE | GENERIC_READ,
+                   FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                   0,
+                   OPEN_ALWAYS,
+                   FILE_ATTRIBUTE_NORMAL,
+                   0);
+
+            img_out.open((built_proj + "\\" + img).c_str());
+        }
+
+        while( !img_in.eof() )
+        {
+            char x = img_in.get();
+            if ((int)x != -1)
+                img_out << x;
+        }
+
+        img_in.close();
+        img_out.close();
+    }
+
 
 };
 void build_stl(string& proj_path) {};
