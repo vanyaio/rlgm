@@ -411,7 +411,7 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
     fout_h.close();
     fout_cpp.close();
 }
-void build_scripts(string& proj_path)//test
+void build_scripts(string& proj_path)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -439,7 +439,7 @@ void build_scripts(string& proj_path)//test
     }
 };
 
-void build_script(string& proj_path, string& script_path_bp, string& script_path_ef, string& name_cpp)//test
+void build_script(string& proj_path, string& script_path_bp, string& script_path_ef, string& name_cpp)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -510,7 +510,7 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
     fout_cpp.close();
 }
 
-void build_vars(string& proj_path)
+void build_vars(string& proj_path)//test
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -542,13 +542,49 @@ void build_vars(string& proj_path)
                0);
     ofstream fout_cpp;
     fout_cpp.open((built_proj + "\\vars.cpp").c_str());
-    fout_cpp << "include\"vars.h\"" << endl;
+    fout_cpp << "#include\"vars.h\"" << endl;
 
     ifstream vars_in;
     vars_in.open(eng_files + "\\vars\\vars.cpp");
     //
     //fout_h << extern type varname; fout_cpp << type varname = ...;
     //
+    if (vars_in.is_open())
+        cout << "hey" << endl;
+    bool in_process = true;
+    bool newline = true;
+    while (!vars_in.eof())
+    {
+        cout << "hello" << endl;
+        char x = vars_in.get();
+        if ((int)x == -1)
+            break;
+
+        fout_cpp << x;
+        if (x == '\n')
+        {
+            newline = true;
+            in_process = true;
+            continue;
+        }
+        if (newline)
+        {
+            newline = false;
+            fout_h << "extern " << x;
+            continue;
+        }
+        if (in_process)
+        {
+            if (x == '=' || x == '(' || x == ';')
+            {
+                fout_h << ";" << endl;
+                in_process = false;
+            }
+            else
+                fout_h << x;
+        }
+    }
+
     fout_h << "#endif" << endl;
 };
 

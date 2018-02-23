@@ -2,7 +2,7 @@
 #include <fstream>
 #include "build.h"
 using namespace std;
-
+int a ;
 int main()
 {
     string s1 = ".\\projects\\test";
@@ -15,5 +15,5 @@ int main()
 
     directory_delete(built_proj.c_str());
     CreateDirectory(built_proj.c_str(), nullptr);
-    //build_lvls(s1);
+    build_vars(s1);
 }
