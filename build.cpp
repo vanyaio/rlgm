@@ -207,7 +207,6 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
 
     fout_h << "#include\".\\..\\..\\objs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\lvls.h\"" << endl;
-    fout_h << "#include\".\\..\\..\\scripts.h\"" << endl;
     fout_h << "#include\".\\..\\..\\imgs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\stl.h\"" << endl;
 
@@ -217,6 +216,7 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
 
     fout_cpp << "#include\"" << name << ".h" << "\"" << endl;
     fout_cpp << "#include\".\\..\\..\\vars.h\"" << endl;
+    fout_cpp << "#include\".\\..\\..\\scripts.h\"" << endl;
 
     ifstream field_in;
     field_in.open((obj_path_ef + "\\fields.cpp").c_str());
@@ -240,9 +240,8 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
         ifstream method_in;
         method_in.open(obj_path_ef + "\\" + obj_method);
 
-        bool endl_met = false;//CAREFUL!! FILE MAY CONTAIN ENDL IN BEGIN
-        //THERE ARE PROBLEMS WITH NAMESPACES
-        while( !method_in.eof() )
+        bool endl_met = false;
+        while ( !endl_met)
         {
             char x = method_in.get();
 
@@ -250,10 +249,15 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
                 endl_met = true;
             if (!endl_met)
                 fout_h << x;
+        }
+        //CAREFUL!! FILE MAY CONTAIN ENDL IN BEGIN
+        //THERE ARE PROBLEMS WITH NAMESPACES
+        while( !method_in.eof() )
+        {
+            char x = method_in.get();
             if ((int)x != -1)
                 fout_cpp << x;
         }
-        fout_h << ";" << endl;
     }
 
     fout_h << "};" << endl;
@@ -357,7 +361,6 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
 
     fout_h << "#include\".\\..\\..\\objs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\lvls.h\"" << endl;
-    fout_h << "#include\".\\..\\..\\scripts.h\"" << endl;
     fout_h << "#include\".\\..\\..\\imgs.h\"" << endl;
     fout_h << "#include\".\\..\\..\\stl.h\"" << endl;
 
@@ -367,6 +370,7 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
 
     fout_cpp << "#include\"" << name << ".h" << "\"" << endl;
     fout_cpp << "#include\".\\..\\..\\vars.h\"" << endl;
+    fout_cpp << "#include\".\\..\\..\\scripts.h\"" << endl;
 
     ifstream field_in;
     field_in.open((lvl_path_ef + "\\fields.cpp").c_str());
@@ -480,13 +484,12 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
 
     fout_h << "#include\".\\..\\objs.h\"" << endl;
     fout_h << "#include\".\\..\\lvls.h\"" << endl;
-    fout_h << "#include\".\\..\\scripts.h\"" << endl;
-    fout_h << "#include\".\\..\\vars.h\"" << endl;
     fout_h << "#include\".\\..\\imgs.h\"" << endl;
     fout_h << "#include\".\\..\\stl.h\"" << endl;
 
     fout_cpp << "#include\"" << name << ".h" << "\"" << endl;
-
+    fout_cpp << "#include\".\\..\\vars.h\"" << endl;
+    fout_cpp << "#include\".\\..\\scripts.h\"" << endl;
 
     ifstream script_in;
     script_in.open(script_path_ef + "\\" + name_cpp);
@@ -510,7 +513,7 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
     fout_cpp.close();
 }
 
-void build_vars(string& proj_path)//test
+void build_vars(string& proj_path)
 {
     string eng_files = proj_path + "\\engine_files";
     string built_proj = proj_path + "\\built_project";
@@ -528,8 +531,6 @@ void build_vars(string& proj_path)//test
     fout_h << "#define vars_h" << endl;
     fout_h << "#include\"objs.h\"" << endl;
     fout_h << "#include\"lvls.h\"" << endl;
-    fout_h << "#include\"scripts.h\"" << endl;
-    fout_h << "#include\"vars.h\"" << endl;
     fout_h << "#include\"imgs.h\"" << endl;
     fout_h << "#include\"stl.h\"" << endl;
 
@@ -543,6 +544,7 @@ void build_vars(string& proj_path)//test
     ofstream fout_cpp;
     fout_cpp.open((built_proj + "\\vars.cpp").c_str());
     fout_cpp << "#include\"vars.h\"" << endl;
+    fout_cpp << "#include\"scripts.h\"" << endl;
 
     ifstream vars_in;
     vars_in.open(eng_files + "\\vars\\vars.cpp");

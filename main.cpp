@@ -13,7 +13,7 @@ int main()
 
     string built_proj = s1 + "\\built_project";
 
-    directory_delete(built_proj.c_str());
-    CreateDirectory(built_proj.c_str(), nullptr);
-    build_vars(s1);
+    //directory_delete(built_proj.c_str());
+    //CreateDirectory(built_proj.c_str(), nullptr);
+    build(s1);
 }
