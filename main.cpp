@@ -2,7 +2,7 @@
 #include <fstream>
 #include "build.h"
 using namespace std;
-int a ;
+int a ;int b;
 int main()
 {
     string s1 = ".\\projects\\test";

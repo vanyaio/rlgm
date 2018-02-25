@@ -223,7 +223,6 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
     while (!field_in.eof())
     {
         char c = field_in.get();
-        cout << c;
         if ((int)c != -1)
             fout_h << c;
     }
@@ -250,6 +249,7 @@ void build_obj(string& proj_path, string& obj_path_bp, string& obj_path_ef, stri
             if (!endl_met)
                 fout_h << x;
         }
+        fout_h << endl;
         //CAREFUL!! FILE MAY CONTAIN ENDL IN BEGIN
         //THERE ARE PROBLEMS WITH NAMESPACES
         while( !method_in.eof() )
@@ -377,7 +377,6 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
     while (!field_in.eof())
     {
         char c = field_in.get();
-        cout << c;
         if ((int)c != -1)
             fout_h << c;
     }
@@ -407,7 +406,7 @@ void build_lvl(string& proj_path, string& lvl_path_bp, string& lvl_path_ef, stri
             if ((int)x != -1)
                 fout_cpp << x;
         }
-        fout_h << ";" << endl;
+        fout_h << endl;
     }
 
     fout_h << "};" << endl;
@@ -511,6 +510,33 @@ void build_script(string& proj_path, string& script_path_bp, string& script_path
     fout_h << "#endif" << endl;
     fout_h.close();
     fout_cpp.close();
+
+    CreateFile((built_proj + "\\main.cpp").c_str(),
+               GENERIC_WRITE | GENERIC_READ,
+               FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+               0,
+               OPEN_ALWAYS,
+               FILE_ATTRIBUTE_NORMAL,
+               0);
+    ofstream main_out;
+    main_out.open((built_proj + "\\main.cpp").c_str());
+    main_out << "#include\".\\..\\objs.h\"" << endl;
+    main_out << "#include\".\\..\\lvls.h\"" << endl;
+    main_out << "#include\".\\..\\imgs.h\"" << endl;
+    main_out << "#include\".\\..\\stl.h\"" << endl;
+    main_out << "#include\".\\..\\vars.h\"" << endl;
+    main_out << "#include\".\\..\\scripts.h\"" << endl;
+
+    ifstream main_in;
+    main_in.open((eng_files + "\\main.cpp").c_str());
+    while (!main_in.eof())
+    {
+        char x = main_in.get();
+        if (int(x) != -1)
+            main_out << x;
+    }
+    main_in.close();
+    main_out.close();
 }
 
 void build_vars(string& proj_path)
@@ -551,13 +577,10 @@ void build_vars(string& proj_path)
     //
     //fout_h << extern type varname; fout_cpp << type varname = ...;
     //
-    if (vars_in.is_open())
-        cout << "hey" << endl;
     bool in_process = true;
     bool newline = true;
     while (!vars_in.eof())
     {
-        cout << "hello" << endl;
         char x = vars_in.get();
         if ((int)x == -1)
             break;
@@ -643,6 +666,56 @@ void build_imgs(string& proj_path)//test
         img_out.close();
     }
 
+    CreateFile((built_proj + "\\img.cpp").c_str(),
+               GENERIC_WRITE | GENERIC_READ,
+               FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+               0,
+               OPEN_ALWAYS,
+               FILE_ATTRIBUTE_NORMAL,
+               0);
+    ofstream img_out;
+    img_out.open((built_proj + "\\img.cpp").c_str());
 
+
+    ifstream img_in;
+    img_in.open("img.h");
+    while (!img_in.eof())
+    {
+        char x = img_in.get();
+        if (int(x) != -1)
+            img_out << x;
+    }
+    img_in.close();
+    img_out.close();
+
+    CreateFile((built_proj + "\\img.h").c_str(),
+               GENERIC_WRITE | GENERIC_READ,
+               FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+               0,
+               OPEN_ALWAYS,
+               FILE_ATTRIBUTE_NORMAL,
+               0);
+    img_out.open((built_proj + "\\img.h").c_str());
+
+    img_in.open("img.h");
+    while (!img_in.eof())
+    {
+        char x = img_in.get();
+        if (int(x) != -1)
+            img_out << x;
+    }
+    img_in.close();
+    img_out.close();
 };
-void build_stl(string& proj_path) {};
+void build_stl(string& proj_path)
+{
+    string eng_files = proj_path + "\\engine_files";
+    string built_proj = proj_path + "\\built_project";
+    CreateFile((built_proj + "\\stl.h").c_str(),
+               GENERIC_WRITE | GENERIC_READ,
+               FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+               0,
+               OPEN_ALWAYS,
+               FILE_ATTRIBUTE_NORMAL,
+               0);
+};
